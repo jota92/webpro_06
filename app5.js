@@ -126,10 +126,18 @@ app.get("/keiyo2/:number", (req, res) => {
 // Delete
 app.get("/keiyo2/delete/:number", (req, res) => {
   // 本来は削除の確認ページを表示する
-  // 本来は削除する番号が存在するか厳重にチェックする
-  // 本来ならここにDBとのやり取りが入る
-  station2.splice( req.params.number, 1 );
-  res.redirect('/keiyo2' );
+  // 削除する番号が有効かどうかチェックする（範囲外は404）
+  const idx = Number(req.params.number);
+  if( Number.isNaN(idx) ){
+    return res.status(400).send('Bad request: invalid index');
+  }
+  if( idx < 0 || idx >= station2.length ){
+    // 範囲外: 404 を返すか一覧にリダイレクトしてエラーメッセージを表示する実装も可能
+    return res.status(404).send('Not found: index out of range');
+  }
+  // 削除
+  station2.splice(idx, 1);
+  return res.redirect('/keiyo2');
 });
 
 // Edit フォーム

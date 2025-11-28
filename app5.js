@@ -126,18 +126,23 @@ app.get("/keiyo2/:number", (req, res) => {
 // Delete
 app.get("/keiyo2/delete/:number", (req, res) => {
   // 本来は削除の確認ページを表示する
-  // 削除する番号が有効かどうかチェックする（範囲外は404）
-  const idx = Number(req.params.number);
-  if( Number.isNaN(idx) ){
-    return res.status(400).send('Bad request: invalid index');
+  // このルートは配列のインデックス（0始まり）で削除するが，
+  // ユーザが表示用のID（record.id）で指定する可能性があるため両方に対応する。
+  const raw = req.params.number;
+  const idx = Number(raw);
+  if(!Number.isNaN(idx) && idx >= 0 && idx < station2.length){
+    // 配列インデックスとして削除
+    station2.splice(idx, 1);
+    return res.redirect('/keiyo2');
   }
-  if( idx < 0 || idx >= station2.length ){
-    // 範囲外: 404 を返すか一覧にリダイレクトしてエラーメッセージを表示する実装も可能
-    return res.status(404).send('Not found: index out of range');
+  // インデックスとして見つからなければ，record.id が一致する要素を探す
+  const findIdx = station2.findIndex( r => String(r.id) === String(raw) );
+  if( findIdx !== -1 ){
+    station2.splice(findIdx, 1);
+    return res.redirect('/keiyo2');
   }
-  // 削除
-  station2.splice(idx, 1);
-  return res.redirect('/keiyo2');
+  // 見つからなければ404
+  return res.status(404).send('Not found: index or id not found');
 });
 
 // Edit フォーム
